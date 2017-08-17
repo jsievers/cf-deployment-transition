@@ -142,6 +142,23 @@ check_ca_private_key() {
   fi
 }
 
+# Deployments using Credhub have Bosh manifests with placeholders
+# that Spiff chokes on.  This function converts them into a string that
+# Spiff will pass through.
+pre_process_credhub_manifest() {
+  local credhub_manifest=$(mktemp)
+  mv $1 $credhub_manifest
+  sed -e 's/((/"[[/g; s/))/]]"/g' $credhub_manifest > $1
+}
+
+# This function restores the string that Spiff passes through back to the
+# proper Credhub placeholder format.
+post_process_credhub_vars_store() {
+  local credhub_vars_store=$(mktmp)
+  mv $1 $credhub_vars_store
+  sed -e "s/'\[\[/((/g; s/\]\]'/))/g" $credhub_vars_store > $1
+}
+
 extract_uaa_jwt_value() {
   local uaa_jwt_spiff_template
   uaa_jwt_spiff_template="${1}"
